@@ -15,6 +15,8 @@ export default function DealingPhase({ players, dealingStep, usedRanks, onDealCa
   const currentPlayer = players[dealingStep.playerIndex];
   const totalPlayers = players.length;
   const playerNum = dealingStep.playerIndex + 1;
+  const isRound1 = dealingStep.round === 1;
+  const currentCard1 = dealingStep.firstCards[dealingStep.playerIndex];
 
   return (
     <div style={{
@@ -60,7 +62,7 @@ export default function DealingPhase({ players, dealingStep, usedRanks, onDealCa
             color: 'var(--accent)',
             marginBottom: '2px',
           }}>
-            Dealing Phase
+            Dealing Phase - Round {dealingStep.round}
           </div>
           <div style={{
             fontFamily: 'var(--font-display)',
@@ -95,12 +97,12 @@ export default function DealingPhase({ players, dealingStep, usedRanks, onDealCa
           color: 'var(--text-dim)',
           letterSpacing: '0.05em',
         }}>
-          Enter their two cards
+          Enter their {isRound1 ? 'first' : 'second'} card
         </div>
       </div>
 
       <div style={{ padding: '0 0 24px' }}>
-        {dealingStep.card1 === null ? (
+        {isRound1 ? (
           <RankPicker
             label="Card 1"
             usedRanks={usedRanks}
@@ -111,7 +113,7 @@ export default function DealingPhase({ players, dealingStep, usedRanks, onDealCa
           <RankPicker
             label="Card 2"
             usedRanks={usedRanks}
-            selectedRank={dealingStep.card1}
+            selectedRank={currentCard1}
             onSelect={onDealCard2}
           />
         )}

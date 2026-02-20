@@ -8,8 +8,9 @@ import NewRoundOverlay from './components/NewRoundOverlay';
 import DealingPhase from './components/DealingPhase';
 
 export interface DealingStep {
+  round: 1 | 2;
   playerIndex: number;
-  card1: Rank | null;
+  firstCards: (Rank | null)[];
 }
 
 export interface TurnState {
@@ -55,7 +56,7 @@ const initialState: AppState = {
   anteAmount: 1,
   turn: null,
   dealtHands: [],
-  dealingStep: { playerIndex: 0, card1: null },
+  dealingStep: { round: 1, playerIndex: 0, firstCards: [] },
 };
 
 export default function App() {
@@ -77,21 +78,33 @@ export default function App() {
       anteAmount,
       turn: null,
       dealtHands: players.map(() => null),
-      dealingStep: { playerIndex: 0, card1: null },
+      dealingStep: { round: 1, playerIndex: 0, firstCards: players.map(() => null) },
     });
   }
 
   function handleDealCard1(rank: Rank) {
-    setState(s => ({
-      ...s,
-      usedRanks: [...s.usedRanks, rank],
-      dealingStep: { ...s.dealingStep, card1: rank },
-    }));
+    setState(s => {
+      const newFirstCards = [...s.dealingStep.firstCards];
+      newFirstCards[s.dealingStep.playerIndex] = rank;
+      const isLastPlayer = s.dealingStep.playerIndex >= s.players.length - 1;
+      if (isLastPlayer) {
+        return {
+          ...s,
+          usedRanks: [...s.usedRanks, rank],
+          dealingStep: { round: 2, playerIndex: 0, firstCards: newFirstCards },
+        };
+      }
+      return {
+        ...s,
+        usedRanks: [...s.usedRanks, rank],
+        dealingStep: { ...s.dealingStep, playerIndex: s.dealingStep.playerIndex + 1, firstCards: newFirstCards },
+      };
+    });
   }
 
   function handleDealCard2(rank: Rank) {
     setState(s => {
-      const card1 = s.dealingStep.card1;
+      const card1 = s.dealingStep.firstCards[s.dealingStep.playerIndex];
       if (!card1) return s;
       const newDealtHands = [...s.dealtHands];
       newDealtHands[s.dealingStep.playerIndex] = [card1, rank];
@@ -103,7 +116,7 @@ export default function App() {
           ...s,
           usedRanks: newUsedRanks,
           dealtHands: newDealtHands,
-          dealingStep: { playerIndex: 0, card1: null },
+          dealingStep: { round: 1, playerIndex: 0, firstCards: [] },
           screen: 'game',
           turn: createFreshTurn(firstHand[0], firstHand[1]),
         };
@@ -112,7 +125,7 @@ export default function App() {
         ...s,
         usedRanks: newUsedRanks,
         dealtHands: newDealtHands,
-        dealingStep: { playerIndex: s.dealingStep.playerIndex + 1, card1: null },
+        dealingStep: { ...s.dealingStep, playerIndex: s.dealingStep.playerIndex + 1 },
       };
     });
   }
@@ -208,7 +221,7 @@ export default function App() {
         screen: 'dealing',
         turn: null,
         dealtHands: s.players.map(() => null),
-        dealingStep: { playerIndex: 0, card1: null },
+        dealingStep: { round: 1, playerIndex: 0, firstCards: s.players.map(() => null) },
       };
     });
   }
